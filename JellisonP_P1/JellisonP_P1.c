@@ -16,9 +16,19 @@ Postcondition:
 #include <stdio.h>
 #include <stdlib.h>
 main();
-void Result(char mathExp, char mathStack);
-void Push(char mathStack, int top, char c);
-void Pop(char mathStack, int top);
+void Result(int fail);
+void Push(char c);
+char Pop();
+
+struct List
+{
+	char data;
+	struct List* next;
+};
+
+struct List* top = NULL;
+struct List* temp = NULL;
+
 int main()
 {
 	FILE *file;
@@ -26,60 +36,89 @@ int main()
 	char mathExp[100];
 	char mathStack[100];
 	int linesNum = 0;
-	int top = 0;
-	fscanf_s(file, "%d", &linesNum);
-	for (int i = 0; i <= linesNum; i++)
+	if (file == NULL)
 	{
-		fscanf_s(file, "%s", mathExp);
+		printf("error\n");
+		return 0;
+	}
+
+	char buff[20];
+	fgets(buff, 20, file);
+	linesNum = (int)strtol(buff, NULL, 10);
+	int fail = 0;
+	for (int i = 0; i < linesNum; i++)
+	{
+		fail = 0;
+		fgets(mathExp, 100, file);
 		for (int j = 0; j < strlen(mathExp); j++)
 		{
-			if (Validate(mathExp[j]) == 1)
+			int valid = Validate(mathExp[j]);
+			if (valid == 1)
 			{
-				Push(mathStack, top, mathExp[j]);
+				Push(mathExp[j]);
 			}
-			else if (Validate(mathExp[j]) == 2)
+			else if (valid == 2)
 			{
-				Pop(mathStack, top);
-			}
-			else
-			{
-				printf("Invalid character.");
+				char c = Pop();
+				if (c == '(' && mathExp[j] == ')')
+				{
+					continue;
+				}
+				if (c == '{' && mathExp[j] == '}')
+				{
+					continue;
+				}
+				if (c == '[' && mathExp[j] == ']')
+				{
+					continue;
+				}
+				else
+				{
+					printf("The string is invalid.\n\n");
+					fail = 1;
+					break;
+				}
 			}
 		}
+		Result(fail);
 	}
 	fclose(file);
-	Result(mathExp, mathStack);
+	getchar();
+	return 0;
 }
 
-void Result(char mathExp, char mathStack)
+void Result(int fail)
 {
-	if (strlen(mathExp) == strlen(mathStack))
+	if (fail == 1)
 	{
-		printf("The string is valid");
+		return;
 	}
-	else
+	if(temp == NULL)
 	{
-		printf("The string is invalid");
+		printf("The string is valid\n\n");
 	}
 }
 
-void Push(char mathStack, int top, char c)
+void Push(char c)
 {
-	top++;
-	mathStack[&top] == c;
+	temp = (struct List*)malloc(sizeof(struct List));
+
+	temp->data = c;
+	temp->next = top;
+	top = temp;
 }
 
-void Pop(char mathStack, int top)
+char Pop()
 {
-	int temp = top;
-	top--;
-	mathStack[&temp] = '\0';
+	temp = top;
+	char tempChar = temp->data;
+	top = top->next;
+	free(temp);
+	temp = NULL;
+	return tempChar;
 }
 
-//void Peek(char mathExp[], int top)
-//{
-//	return mathExp[top];
-//}
+
 int Validate(char c)
 {
 	if (c == '(' || c == '{' || c == '[')
